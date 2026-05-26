@@ -1,0 +1,11 @@
+{
+  "name": "workout-logger",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"API,WEB\" --prefix-colors \"green,blue\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
