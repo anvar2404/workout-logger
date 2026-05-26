@@ -167,7 +167,7 @@ function ProgressContent() {
                   }}
                   labelStyle={{ color: 'var(--smoke)', fontSize: 10 }}
                   itemStyle={{ color: 'var(--lime)', fontSize: 14, fontWeight: 700 }}
-                  formatter={(val: number) => [`${val} kg`, '']}
+                  formatter={(val) => [`${val ?? ''} kg`, '']}
                 />
                 <Area
                   type="monotone"
