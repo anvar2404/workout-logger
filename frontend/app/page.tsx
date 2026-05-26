@@ -5,110 +5,136 @@ import Link from 'next/link'
 import api from '@/lib/api'
 import { Workout } from '@/lib/types'
 import AuthGuard from '@/components/AuthGuard'
-import { calcExerciseCalories, calcTotalCalories } from '@/lib/calories'
+import { calcTotalCalories } from '@/lib/calories'
+import { calculateStreak, getMuscleGroup, getMuscleColor } from '@/lib/utils'
 
-function maxWeight(workout: Workout) {
-  return Math.max(...workout.exercises.flatMap((ex) => ex.sets.map((s) => s.weight)))
+function totalVolume(workout: Workout) {
+  return workout.exercises.reduce((acc, ex) =>
+    acc + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
 }
 
-function HeroCard({ workout }: { workout: Workout }) {
-  const date = new Date(workout.date).toLocaleDateString('ru-RU', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+function StreakBadge({ streak }: { streak: number }) {
+  if (streak < 2) return null
   return (
     <div
-      className="rounded-xl p-6 mb-5 anim-up"
       style={{
-        background: 'var(--card)',
-        border: '1px solid var(--edge)',
-        borderLeft: '3px solid var(--lime)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        background: 'rgba(255,155,33,0.1)',
+        border: '1px solid rgba(255,155,33,0.3)',
+        borderRadius: 8,
+        padding: '6px 12px',
       }}
     >
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          <p className="font-data text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--smoke)' }}>
-            Latest Session
-          </p>
-          <p className="font-data text-xs" style={{ color: 'var(--smoke)' }}>{date}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-data text-xs px-2 py-1 rounded" style={{ background: 'var(--lime-dim)', color: 'var(--lime)', border: '1px solid rgba(201,255,71,0.15)' }}>
-            ~{calcTotalCalories(workout.exercises)} kcal
-          </span>
-          <span className="font-data text-xs px-2 py-1 rounded" style={{ background: 'var(--card-2)', color: 'var(--smoke)', border: '1px solid var(--edge-2)' }}>
-            {workout.exercises.length} ex
-          </span>
-        </div>
+      <span style={{ fontSize: 16 }}>🔥</span>
+      <div>
+        <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 22, color: 'var(--amber)', lineHeight: 1 }}>
+          {streak}
+        </span>
+        <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, color: 'var(--amber)', letterSpacing: '0.08em', marginLeft: 4, opacity: 0.7 }}>
+          DAY STREAK
+        </span>
       </div>
-
-      <div className="space-y-4">
-        {workout.exercises.map((ex, i) => (
-          <div key={i}>
-            <p className="font-display text-2xl mb-2 leading-none" style={{ color: 'var(--iron)' }}>
-              {ex.name.toUpperCase()}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {ex.sets.map((s, j) => (
-                <span
-                  key={j}
-                  className="font-data text-sm px-3 py-1 rounded"
-                  style={{
-                    background: 'var(--card-2)',
-                    border: '1px solid var(--edge-2)',
-                    color: j === 0 ? 'var(--lime)' : 'var(--iron)',
-                  }}
-                >
-                  {s.weight}<span style={{ color: 'var(--smoke)', fontSize: 11 }}>kg</span>
-                  <span style={{ color: 'var(--smoke)', margin: '0 3px' }}>×</span>
-                  {s.reps}
-                </span>
-              ))}
-              <span className="font-data text-xs ml-1" style={{ color: 'var(--smoke)' }}>
-                ~{calcExerciseCalories(ex.name, ex.sets)} kcal
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {workout.notes && (
-        <p className="mt-4 pt-4 text-sm" style={{ color: 'var(--smoke)', borderTop: '1px solid var(--edge)' }}>
-          {workout.notes}
-        </p>
-      )}
     </div>
   )
 }
 
-function SmallCard({ workout }: { workout: Workout }) {
-  const date = new Date(workout.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-  const top = workout.exercises[0]
-  const max = maxWeight(workout)
+function WorkoutCard({ workout, isLatest }: { workout: Workout; isLatest: boolean }) {
+  const date = new Date(workout.date)
+  const day = date.toLocaleDateString('en', { weekday: 'short' }).toUpperCase()
+  const dateStr = date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
+  const vol = totalVolume(workout)
+  const kcal = calcTotalCalories(workout.exercises)
+  const muscles = [...new Set(workout.exercises.map((ex) => getMuscleGroup(ex.name)).filter((g) => g !== 'Other'))]
 
   return (
-    <div className="session-card rounded-xl p-4 cursor-default">
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-data text-xs" style={{ color: 'var(--smoke)' }}>{date}</span>
-        <span className="font-data text-xs" style={{ color: 'var(--smoke)' }}>
-          {workout.exercises.length} ex
-        </span>
+    <div
+      className={isLatest ? 'anim-up' : ''}
+      style={{
+        background: 'var(--card)',
+        border: `1px solid ${isLatest ? 'rgba(201,255,71,0.2)' : 'var(--edge)'}`,
+        borderLeft: `3px solid ${isLatest ? 'var(--lime)' : 'var(--edge-2)'}`,
+        borderRadius: 14,
+        padding: isLatest ? '18px 16px' : '14px 14px',
+        marginBottom: 10,
+        transition: 'border-left-color 0.15s',
+      }}
+    >
+      {/* Top row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <div>
+          {isLatest && (
+            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--lime)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+              Latest Session
+            </span>
+          )}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 20, color: 'var(--iron)', lineHeight: 1 }}>{day}</span>
+            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, color: 'var(--smoke)' }}>{dateStr}</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--font-bebas)', fontSize: 22, color: 'var(--lime)', lineHeight: 1 }}>
+            {vol >= 1000 ? `${(vol / 1000).toFixed(1)}t` : `${vol}kg`}
+          </div>
+          <div style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, color: 'var(--smoke)', letterSpacing: '0.06em' }}>
+            VOL · ~{kcal} KCAL
+          </div>
+        </div>
       </div>
-      <p className="font-display text-xl leading-none mb-2" style={{ color: 'var(--iron)' }}>
-        {top.name.toUpperCase()}
-        {workout.exercises.length > 1 && (
-          <span className="font-data text-xs ml-2" style={{ color: 'var(--smoke)', fontFamily: 'var(--font-jetbrains)' }}>
-            +{workout.exercises.length - 1}
+
+      {/* Exercises */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {workout.exercises.slice(0, isLatest ? 4 : 2).map((ex, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: getMuscleColor(ex.name),
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 16, color: 'var(--iron)', lineHeight: 1, flex: 1 }}>
+              {ex.name}
+            </span>
+            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)' }}>
+              {ex.sets.length}×{ex.sets.map((s) => s.reps).join('/')}
+            </span>
+          </div>
+        ))}
+        {workout.exercises.length > (isLatest ? 4 : 2) && (
+          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke-2)', paddingLeft: 14 }}>
+            +{workout.exercises.length - (isLatest ? 4 : 2)} more
           </span>
         )}
-      </p>
-      <div className="flex items-baseline gap-3">
-        <p className="font-data text-lg font-bold" style={{ color: 'var(--lime)' }}>
-          {max}<span className="text-xs font-normal ml-0.5" style={{ color: 'var(--smoke)' }}>kg</span>
-        </p>
-        <p className="font-data text-sm" style={{ color: 'var(--smoke)' }}>
-          ~{calcTotalCalories(workout.exercises)} kcal
-        </p>
       </div>
+
+      {/* Muscle tags */}
+      {isLatest && muscles.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 12 }}>
+          {muscles.slice(0, 5).map((m) => (
+            <span
+              key={m}
+              style={{
+                fontFamily: 'var(--font-jetbrains)',
+                fontSize: 9,
+                letterSpacing: '0.06em',
+                padding: '2px 7px',
+                borderRadius: 4,
+                background: `${getMuscleColor(m)}18`,
+                border: `1px solid ${getMuscleColor(m)}40`,
+                color: getMuscleColor(m),
+                textTransform: 'uppercase',
+              }}
+            >
+              {m}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -116,78 +142,97 @@ function SmallCard({ workout }: { workout: Workout }) {
 function DashboardContent() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
-    api
-      .get('/workouts?limit=5')
-      .then((r) => setWorkouts(r.data.workouts))
-      .catch(() => setError('Could not load workouts'))
-      .finally(() => setLoading(false))
+    api.get('/workouts?limit=5').then((r) => setWorkouts(r.data.workouts)).finally(() => setLoading(false))
   }, [])
 
-  const today = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })
+  const streak = calculateStreak(workouts)
+  const todayStr = new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 py-20" style={{ color: 'var(--smoke)' }}>
-        <span className="spin inline-block w-4 h-4 rounded-full border-2" style={{ borderColor: 'var(--lime)', borderTopColor: 'transparent' }} />
-        <span className="font-data text-xs tracking-widest uppercase">Loading</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 80, color: 'var(--smoke)' }}>
+        <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--lime)', borderTopColor: 'transparent' }} />
+        <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Loading</span>
       </div>
     )
   }
 
-  if (error) return <p className="font-data text-sm" style={{ color: 'var(--danger)' }}>{error}</p>
-
   if (workouts.length === 0) {
     return (
-      <div className="py-24 text-center anim-in">
-        <p className="font-display text-6xl mb-3" style={{ color: 'var(--edge-2)' }}>NO DATA</p>
-        <p className="text-sm mb-6" style={{ color: 'var(--smoke)' }}>Start tracking your lifts</p>
-        <Link href="/workouts/new" className="btn-lime px-6 py-2 rounded text-sm inline-block">
-          LOG FIRST SESSION
+      <div className="anim-in" style={{ paddingTop: 60, textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-bebas)', fontSize: 72, color: 'var(--edge-2)', lineHeight: 0.9, marginBottom: 16 }}>
+          IRONLOG
+        </div>
+        <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 12, color: 'var(--smoke)', marginBottom: 32, letterSpacing: '0.06em' }}>
+          Your training journal starts here
+        </p>
+        <Link
+          href="/workouts/new"
+          className="btn-lime"
+          style={{ display: 'inline-block', padding: '14px 36px', borderRadius: 12, fontSize: 18, letterSpacing: '0.06em', textDecoration: 'none' }}
+        >
+          START FIRST SESSION
         </Link>
       </div>
     )
   }
-
-  const [hero, ...rest] = workouts
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-end justify-between mb-6 anim-up">
-        <div>
-          <p className="font-data text-xs tracking-widest uppercase mb-1" style={{ color: 'var(--smoke)' }}>
-            {today}
-          </p>
-          <h1 className="font-display text-4xl leading-none" style={{ color: 'var(--iron)' }}>
-            SESSIONS
-          </h1>
+      <div className="anim-up" style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--smoke)', textTransform: 'uppercase', marginBottom: 2 }}>
+              {todayStr}
+            </p>
+            <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: 42, color: 'var(--iron)', lineHeight: 0.95, letterSpacing: '0.02em' }}>
+              IRONLOG
+            </h1>
+          </div>
+          <StreakBadge streak={streak} />
         </div>
-        <span className="font-data text-xs px-3 py-1.5 rounded" style={{ background: 'var(--card)', border: '1px solid var(--edge)', color: 'var(--smoke)' }}>
-          {workouts.length} recent
-        </span>
       </div>
 
-      {/* Hero card */}
-      <HeroCard workout={hero} />
+      {/* CTA */}
+      <Link
+        href="/workouts/new"
+        className="btn-lime anim-up"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          padding: '16px',
+          borderRadius: 14,
+          fontSize: 20,
+          letterSpacing: '0.06em',
+          textDecoration: 'none',
+          marginBottom: 24,
+          animationDelay: '40ms',
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        START SESSION
+      </Link>
 
-      {/* Grid of older sessions */}
-      {rest.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 stagger">
-          {rest.map((w) => <SmallCard key={w._id} workout={w} />)}
+      {/* Recent sessions */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--smoke)', textTransform: 'uppercase' }}>
+            Recent Sessions
+          </span>
+          <Link href="/workouts" style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)', textDecoration: 'none', letterSpacing: '0.06em' }}>
+            View all →
+          </Link>
         </div>
-      )}
-
-      <div className="mt-6 text-center">
-        <Link
-          href="/workouts"
-          className="font-data text-xs tracking-widest uppercase transition-colors"
-          style={{ color: 'var(--smoke)' }}
-        >
-          View full history →
-        </Link>
+        {workouts.map((w, i) => (
+          <WorkoutCard key={w._id} workout={w} isLatest={i === 0} />
+        ))}
       </div>
     </div>
   )

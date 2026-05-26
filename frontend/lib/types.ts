@@ -1,6 +1,7 @@
 export interface Set {
   reps: number
   weight: number
+  rpe?: number
 }
 
 export interface Exercise {
