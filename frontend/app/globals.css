@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+:root {
+  --lime: #C9FF47;
+  --lime-dim: rgba(201, 255, 71, 0.07);
+  --lime-glow: rgba(201, 255, 71, 0.18);
+  --void: #080A08;
+  --card: #0D100D;
+  --card-2: #131713;
+  --edge: #1A1F1A;
+  --edge-2: #232923;
+  --iron: #DCE8DC;
+  --smoke: #566356;
+  --smoke-2: #38423A;
+  --danger: #FF5252;
+}
+
+@theme inline {
+  --color-lime: var(--lime);
+  --color-void: var(--void);
+  --color-card: var(--card);
+  --color-card2: var(--card-2);
+  --color-edge: var(--edge);
+  --color-edge2: var(--edge-2);
+  --color-iron: var(--iron);
+  --color-smoke: var(--smoke);
+  --color-danger: var(--danger);
+  --font-display: var(--font-bebas);
+  --font-data: var(--font-jetbrains);
+  --font-sans: var(--font-dm);
+}
+
+html {
+  background-color: var(--void);
+}
+
+body {
+  background-color: var(--void);
+  color: var(--iron);
+  font-family: var(--font-dm), system-ui, sans-serif;
+  min-height: 100vh;
+  /* subtle dot grid */
+  background-image: radial-gradient(circle, rgba(201,255,71,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: fixed;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--edge-2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--lime); }
+
+/* inputs */
+input, select, textarea {
+  background: var(--card);
+  border: 1px solid var(--edge-2);
+  color: var(--iron);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--lime);
+  box-shadow: 0 0 0 3px var(--lime-dim);
+}
+input::placeholder, textarea::placeholder { color: var(--smoke-2); }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* select arrow */
+select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23566356' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* card with left accent border */
+.session-card {
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-left: 2px solid var(--edge-2);
+  transition: border-left-color 0.18s, background-color 0.15s;
+}
+.session-card:hover {
+  border-left-color: var(--lime);
+  background-color: var(--card-2);
+}
+
+/* animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.anim-up { animation: fadeUp 0.35s ease forwards; }
+.anim-in { animation: fadeIn 0.25s ease forwards; }
+.spin { animation: spin 0.8s linear infinite; }
+
+/* staggered list */
+.stagger > * { opacity: 0; animation: fadeUp 0.35s ease forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 55ms; }
+.stagger > *:nth-child(3) { animation-delay: 110ms; }
+.stagger > *:nth-child(4) { animation-delay: 165ms; }
+.stagger > *:nth-child(5) { animation-delay: 220ms; }
+
+/* lime button */
+.btn-lime {
+  background: var(--lime);
+  color: var(--void);
+  font-family: var(--font-bebas), sans-serif;
+  letter-spacing: 0.05em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-lime:hover { opacity: 0.9; }
+.btn-lime:active { transform: scale(0.98); }
+.btn-lime:disabled { opacity: 0.35; }
+
+/* ghost button */
+.btn-ghost {
+  border: 1px solid var(--edge-2);
+  color: var(--smoke);
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
+
+/* data font helper */
+.font-data { font-family: var(--font-jetbrains), monospace; }
+.font-display { font-family: var(--font-bebas), sans-serif; }
