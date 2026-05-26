@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
 
 const TABS = [
   {
@@ -61,6 +62,7 @@ const TABS = [
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   return (
     <nav
@@ -80,8 +82,7 @@ export default function BottomNav() {
       }}
     >
       {TABS.map(({ href, label, icon }) => {
-        const active =
-          href === '/' ? pathname === '/' : pathname.startsWith(href)
+        const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
         return (
           <Link
             key={href}
@@ -94,24 +95,63 @@ export default function BottomNav() {
               justifyContent: 'center',
               gap: 3,
               textDecoration: 'none',
-              transition: 'opacity 0.15s',
             }}
           >
             {icon(active)}
-            <span
-              style={{
-                fontFamily: 'var(--font-jetbrains), monospace',
-                fontSize: 9,
-                letterSpacing: '0.08em',
-                color: active ? 'var(--lime)' : 'var(--smoke)',
-                transition: 'color 0.15s',
-              }}
-            >
+            <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 9, letterSpacing: '0.08em', color: active ? 'var(--lime)' : 'var(--smoke)', transition: 'color 0.15s' }}>
               {label}
             </span>
           </Link>
         )
       })}
+
+      {/* Auth tab */}
+      {user ? (
+        <button
+          onClick={logout}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="var(--smoke)" strokeWidth="1.5" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="var(--smoke)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 9, letterSpacing: '0.08em', color: 'var(--smoke)' }}>
+            EXIT
+          </span>
+        </button>
+      ) : (
+        <Link
+          href="/login"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            textDecoration: 'none',
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="var(--lime)" strokeWidth="1.5" strokeLinecap="round" />
+            <polyline points="10,17 15,12 10,7" stroke="var(--lime)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="15" y1="12" x2="3" y2="12" stroke="var(--lime)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 9, letterSpacing: '0.08em', color: 'var(--lime)' }}>
+            LOGIN
+          </span>
+        </Link>
+      )}
     </nav>
   )
 }
