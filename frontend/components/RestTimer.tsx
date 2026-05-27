@@ -41,163 +41,71 @@ export default function RestTimer({ seconds, onDone, onSkip }: RestTimerProps) {
   const circumference = 2 * Math.PI * radius
   const progress = remaining / total.current
   const dashOffset = circumference * (1 - progress)
+  const isLow = remaining <= 5
 
   const mins = Math.floor(remaining / 60)
   const secs = remaining % 60
-  const display = mins > 0
-    ? `${mins}:${String(secs).padStart(2, '0')}`
-    : `${secs}`
+  const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}`
 
   return (
     <div className="rest-timer-overlay" onClick={onSkip}>
-      <div
-        className="anim-slide-up"
-        style={{ textAlign: 'center' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p
-          style={{
-            fontFamily: 'var(--font-jetbrains), monospace',
-            fontSize: 11,
-            letterSpacing: '0.15em',
-            color: 'var(--smoke)',
-            marginBottom: 32,
-            textTransform: 'uppercase',
-          }}
-        >
-          Rest
-        </p>
+      <div className="anim-slide-up" style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
 
-        {/* SVG circle */}
-        <div style={{ position: 'relative', width: 192, height: 192, margin: '0 auto 32px' }}>
-          <svg width="192" height="192" style={{ transform: 'rotate(-90deg)' }}>
-            {/* Track */}
-            <circle
-              cx="96" cy="96" r={radius}
-              fill="none"
-              stroke="var(--edge-2)"
-              strokeWidth="4"
-            />
-            {/* Progress */}
-            <circle
-              cx="96" cy="96" r={radius}
-              fill="none"
-              stroke={remaining <= 5 ? 'var(--danger)' : 'var(--lime)'}
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s' }}
-            />
-          </svg>
-          {/* Timer text */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span
-              className={remaining <= 5 ? 'timer-pulse' : ''}
-              style={{
-                fontFamily: 'var(--font-bebas), sans-serif',
-                fontSize: remaining > 60 ? 52 : 64,
-                lineHeight: 1,
-                color: remaining <= 5 ? 'var(--danger)' : 'var(--iron)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {display}
-            </span>
-            <span
-              style={{
-                fontFamily: 'var(--font-jetbrains), monospace',
-                fontSize: 10,
-                color: 'var(--smoke)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                marginTop: 4,
-              }}
-            >
-              sec
-            </span>
+        <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '36px 40px', boxShadow: 'var(--shadow-lg)', maxWidth: 300 }}>
+          <p style={{ fontFamily: 'var(--font-dm)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-2)', marginBottom: 28, textTransform: 'uppercase' }}>
+            Rest Timer
+          </p>
+
+          <div style={{ position: 'relative', width: 192, height: 192, margin: '0 auto 28px' }}>
+            <svg width="192" height="192" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="96" cy="96" r={radius} fill="none" stroke="var(--border)" strokeWidth="5" />
+              <circle
+                cx="96" cy="96" r={radius} fill="none"
+                stroke={isLow ? 'var(--danger)' : 'var(--accent)'}
+                strokeWidth="5" strokeLinecap="round"
+                strokeDasharray={circumference} strokeDashoffset={dashOffset}
+                style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s' }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <span
+                className={isLow ? 'timer-pulse' : ''}
+                style={{ fontFamily: 'var(--font-bebas)', fontSize: remaining > 60 ? 56 : 68, lineHeight: 1, color: isLow ? 'var(--danger)' : 'var(--text)', letterSpacing: '0.02em' }}
+              >
+                {display}
+              </span>
+              <span style={{ fontFamily: 'var(--font-dm)', fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>seconds</span>
+            </div>
           </div>
-        </div>
 
-        {/* Controls */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button
-            onClick={() => addTime(15)}
-            style={{
-              fontFamily: 'var(--font-jetbrains), monospace',
-              fontSize: 12,
-              letterSpacing: '0.08em',
-              color: 'var(--smoke)',
-              background: 'var(--card)',
-              border: '1px solid var(--edge-2)',
-              borderRadius: 10,
-              padding: '10px 18px',
-              cursor: 'pointer',
-              transition: 'color 0.15s, border-color 0.15s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--iron)'; e.currentTarget.style.borderColor = 'var(--edge)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--smoke)'; e.currentTarget.style.borderColor = 'var(--edge-2)' }}
-          >
-            +15S
-          </button>
-          <button
-            onClick={() => addTime(30)}
-            style={{
-              fontFamily: 'var(--font-jetbrains), monospace',
-              fontSize: 12,
-              letterSpacing: '0.08em',
-              color: 'var(--smoke)',
-              background: 'var(--card)',
-              border: '1px solid var(--edge-2)',
-              borderRadius: 10,
-              padding: '10px 18px',
-              cursor: 'pointer',
-              transition: 'color 0.15s, border-color 0.15s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--iron)'; e.currentTarget.style.borderColor = 'var(--edge)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--smoke)'; e.currentTarget.style.borderColor = 'var(--edge-2)' }}
-          >
-            +30S
-          </button>
-          <button
-            onClick={onSkip}
-            style={{
-              fontFamily: 'var(--font-bebas), sans-serif',
-              fontSize: 16,
-              letterSpacing: '0.06em',
-              color: 'var(--void)',
-              background: 'var(--lime)',
-              border: 'none',
-              borderRadius: 10,
-              padding: '10px 24px',
-              cursor: 'pointer',
-              transition: 'opacity 0.15s',
-            }}
-          >
-            SKIP
-          </button>
-        </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button
+              onClick={() => addTime(15)}
+              className="btn-ghost"
+              style={{ padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
+              +15s
+            </button>
+            <button
+              onClick={() => addTime(30)}
+              className="btn-ghost"
+              style={{ padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
+              +30s
+            </button>
+            <button
+              onClick={onSkip}
+              className="btn-accent"
+              style={{ padding: '9px 20px', borderRadius: 10, fontSize: 13, cursor: 'pointer' }}
+            >
+              Skip
+            </button>
+          </div>
 
-        <p
-          style={{
-            marginTop: 20,
-            fontFamily: 'var(--font-jetbrains), monospace',
-            fontSize: 10,
-            color: 'var(--smoke-2)',
-            letterSpacing: '0.05em',
-          }}
-        >
-          tap outside to skip
-        </p>
+          <p style={{ marginTop: 16, fontFamily: 'var(--font-dm)', fontSize: 11, color: 'var(--text-3)' }}>
+            tap outside to skip
+          </p>
+        </div>
       </div>
     </div>
   )

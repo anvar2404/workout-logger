@@ -8,93 +8,62 @@ import AuthGuard from '@/components/AuthGuard'
 import { calcTotalCalories } from '@/lib/calories'
 import { getMuscleColor, getMuscleGroup } from '@/lib/utils'
 
-function sessionVolume(workout: Workout) {
+function totalVolume(workout: Workout) {
   return workout.exercises.reduce((acc, ex) => acc + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
 }
 
 function WorkoutRow({ workout, onDelete, deleting }: { workout: Workout; onDelete: () => void; deleting: boolean }) {
   const date = new Date(workout.date)
-  const day = date.toLocaleDateString('en', { weekday: 'short' }).toUpperCase()
+  const day = date.toLocaleDateString('en', { weekday: 'long' })
   const dateStr = date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
-  const vol = sessionVolume(workout)
+  const vol = totalVolume(workout)
   const kcal = calcTotalCalories(workout.exercises)
   const muscles = [...new Set(workout.exercises.map((ex) => getMuscleGroup(ex.name)).filter((g) => g !== 'Other'))]
 
   return (
-    <div
-      className="session-card"
-      style={{ borderRadius: 14, padding: '14px', marginBottom: 10 }}
-    >
-      {/* Top row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 22, color: 'var(--iron)', lineHeight: 1 }}>{day}</span>
-          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)' }}>{dateStr}</span>
+    <div className="card" style={{ padding: '16px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-dm)', fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{day}</div>
+          <div style={{ fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-3)', marginTop: 1 }}>{dateStr}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ textAlign: 'right' }}>
-            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 18, color: 'var(--lime)' }}>
+            <div style={{ fontFamily: 'var(--font-jetbrains)', fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>
               {vol >= 1000 ? `${(vol / 1000).toFixed(1)}t` : `${vol}kg`}
-            </span>
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, color: 'var(--smoke)', marginLeft: 5 }}>
-              ~{kcal} kcal
-            </span>
+            </div>
+            <div style={{ fontFamily: 'var(--font-dm)', fontSize: 11, color: 'var(--text-3)' }}>~{kcal} kcal</div>
           </div>
           <button
             onClick={onDelete}
             disabled={deleting}
-            style={{
-              fontFamily: 'var(--font-jetbrains)',
-              fontSize: 9,
-              letterSpacing: '0.08em',
-              color: 'var(--smoke-2)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-              transition: 'color 0.15s',
-            }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 4, transition: 'color 0.15s' }}
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--smoke-2)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-3)')}
           >
-            {deleting ? '...' : 'DEL'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Exercises */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
         {workout.exercises.map((ex, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: getMuscleColor(ex.name), flexShrink: 0 }} />
-            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 16, color: 'var(--iron)', lineHeight: 1, flex: 1 }}>
-              {ex.name}
-            </span>
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)' }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: getMuscleColor(ex.name), flexShrink: 0 }} />
+            <span style={{ fontFamily: 'var(--font-dm)', fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1 }}>{ex.name}</span>
+            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, color: 'var(--text-3)' }}>
               {ex.sets.map((s) => `${s.weight}×${s.reps}`).join('  ')}
             </span>
           </div>
         ))}
       </div>
 
-      {/* Muscle tags */}
       {muscles.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {muscles.slice(0, 5).map((m) => (
-            <span
-              key={m}
-              style={{
-                fontFamily: 'var(--font-jetbrains)',
-                fontSize: 9,
-                letterSpacing: '0.05em',
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: `${getMuscleColor(m)}15`,
-                border: `1px solid ${getMuscleColor(m)}35`,
-                color: getMuscleColor(m),
-                textTransform: 'uppercase',
-              }}
-            >
+            <span key={m} style={{ fontFamily: 'var(--font-dm)', fontSize: 10, fontWeight: 500, padding: '2px 7px', borderRadius: 999, background: `${getMuscleColor(m)}15`, border: `1px solid ${getMuscleColor(m)}35`, color: getMuscleColor(m) }}>
               {m}
             </span>
           ))}
@@ -102,7 +71,7 @@ function WorkoutRow({ workout, onDelete, deleting }: { workout: Workout; onDelet
       )}
 
       {workout.notes && (
-        <p style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--edge)', fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--smoke)' }}>
+        <p style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-2)' }}>
           {workout.notes}
         </p>
       )}
@@ -138,81 +107,44 @@ function WorkoutsHistoryContent() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="anim-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+      <div className="anim-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--smoke)', textTransform: 'uppercase', marginBottom: 2 }}>
-            All time
-          </p>
-          <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: 42, color: 'var(--iron)', lineHeight: 0.95, letterSpacing: '0.02em' }}>
-            HISTORY
-          </h1>
+          <h1 style={{ fontFamily: 'var(--font-dm)', fontWeight: 800, fontSize: 26, color: 'var(--text)', margin: 0 }}>History</h1>
+          {total > 0 && <p style={{ fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-3)', marginTop: 3 }}>{total} sessions logged</p>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {total > 0 && (
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)', background: 'var(--card)', border: '1px solid var(--edge)', borderRadius: 8, padding: '5px 10px' }}>
-              {total} sessions
-            </span>
-          )}
-          <Link
-            href="/workouts/new"
-            className="btn-lime"
-            style={{ padding: '8px 16px', borderRadius: 10, fontSize: 16, letterSpacing: '0.05em', textDecoration: 'none' }}
-          >
-            + LOG
-          </Link>
-        </div>
+        <Link href="/workouts/new" className="btn-accent" style={{ padding: '9px 18px', borderRadius: 10, fontSize: 14, textDecoration: 'none' }}>
+          + Log
+        </Link>
       </div>
 
       {loading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '40px 0', color: 'var(--smoke)' }}>
-          <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--lime)', borderTopColor: 'transparent' }} />
-          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Loading</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '40px 0', color: 'var(--text-3)' }}>
+          <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+          <span style={{ fontFamily: 'var(--font-dm)', fontSize: 13 }}>Loading...</span>
         </div>
       )}
 
       {!loading && workouts.length === 0 && (
         <div className="anim-in" style={{ paddingTop: 60, textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-bebas)', fontSize: 60, color: 'var(--edge-2)' }}>EMPTY</p>
-          <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 12, color: 'var(--smoke)', marginBottom: 28 }}>No sessions logged yet</p>
-          <Link href="/workouts/new" className="btn-lime" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, fontSize: 18, textDecoration: 'none', letterSpacing: '0.05em' }}>
-            LOG SESSION
+          <p style={{ fontFamily: 'var(--font-dm)', fontWeight: 700, fontSize: 18, color: 'var(--text)', marginBottom: 8 }}>No sessions yet</p>
+          <p style={{ fontFamily: 'var(--font-dm)', fontSize: 14, color: 'var(--text-2)', marginBottom: 24 }}>Log your first workout to get started</p>
+          <Link href="/workouts/new" className="btn-accent" style={{ display: 'inline-block', padding: '11px 28px', borderRadius: 12, fontSize: 14, textDecoration: 'none' }}>
+            Log Session
           </Link>
         </div>
       )}
 
       <div className="stagger">
         {workouts.map((w) => (
-          <WorkoutRow
-            key={w._id}
-            workout={w}
-            onDelete={() => remove(w._id)}
-            deleting={removing === w._id}
-          />
+          <WorkoutRow key={w._id} workout={w} onDelete={() => remove(w._id)} deleting={removing === w._id} />
         ))}
       </div>
 
       {pages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 24 }}>
-          <button
-            onClick={() => load(page - 1)}
-            disabled={page === 1}
-            className="btn-ghost"
-            style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 8 }}
-          >
-            ← PREV
-          </button>
-          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, color: 'var(--smoke)' }}>
-            {page} / {pages}
-          </span>
-          <button
-            onClick={() => load(page + 1)}
-            disabled={page === pages}
-            className="btn-ghost"
-            style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 8 }}
-          >
-            NEXT →
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24 }}>
+          <button onClick={() => load(page - 1)} disabled={page === 1} className="btn-ghost" style={{ padding: '8px 16px', borderRadius: 9, fontSize: 13, cursor: 'pointer' }}>← Prev</button>
+          <span style={{ fontFamily: 'var(--font-dm)', fontSize: 13, color: 'var(--text-2)' }}>{page} / {pages}</span>
+          <button onClick={() => load(page + 1)} disabled={page === pages} className="btn-ghost" style={{ padding: '8px 16px', borderRadius: 9, fontSize: 13, cursor: 'pointer' }}>Next →</button>
         </div>
       )}
     </div>

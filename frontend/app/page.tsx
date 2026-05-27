@@ -6,43 +6,16 @@ import api from '@/lib/api'
 import { Workout } from '@/lib/types'
 import AuthGuard from '@/components/AuthGuard'
 import { calcTotalCalories } from '@/lib/calories'
-import { calculateStreak, getMuscleGroup, getMuscleColor } from '@/lib/utils'
+import { calculateStreak, getMuscleColor, getMuscleGroup } from '@/lib/utils'
 
 function totalVolume(workout: Workout) {
   return workout.exercises.reduce((acc, ex) =>
     acc + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
 }
 
-function StreakBadge({ streak }: { streak: number }) {
-  if (streak < 2) return null
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        background: 'rgba(255,155,33,0.1)',
-        border: '1px solid rgba(255,155,33,0.3)',
-        borderRadius: 8,
-        padding: '6px 12px',
-      }}
-    >
-      <span style={{ fontSize: 16 }}>🔥</span>
-      <div>
-        <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 22, color: 'var(--amber)', lineHeight: 1 }}>
-          {streak}
-        </span>
-        <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, color: 'var(--amber)', letterSpacing: '0.08em', marginLeft: 4, opacity: 0.7 }}>
-          DAY STREAK
-        </span>
-      </div>
-    </div>
-  )
-}
-
 function WorkoutCard({ workout, isLatest }: { workout: Workout; isLatest: boolean }) {
   const date = new Date(workout.date)
-  const day = date.toLocaleDateString('en', { weekday: 'short' }).toUpperCase()
+  const day = date.toLocaleDateString('en', { weekday: 'short' })
   const dateStr = date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
   const vol = totalVolume(workout)
   const kcal = calcTotalCalories(workout.exercises)
@@ -50,86 +23,61 @@ function WorkoutCard({ workout, isLatest }: { workout: Workout; isLatest: boolea
 
   return (
     <div
-      className={isLatest ? 'anim-up' : ''}
+      className="card anim-up"
       style={{
-        background: 'var(--card)',
-        border: `1px solid ${isLatest ? 'rgba(201,255,71,0.2)' : 'var(--edge)'}`,
-        borderLeft: `3px solid ${isLatest ? 'var(--lime)' : 'var(--edge-2)'}`,
-        borderRadius: 14,
-        padding: isLatest ? '18px 16px' : '14px 14px',
+        padding: '16px',
         marginBottom: 10,
-        transition: 'border-left-color 0.15s',
+        borderLeft: isLatest ? '3px solid var(--accent)' : '1px solid var(--border)',
       }}
     >
-      {/* Top row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
           {isLatest && (
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--lime)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-              Latest Session
+            <span style={{ fontFamily: 'var(--font-dm)', fontSize: 10, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 3 }}>
+              Latest
             </span>
           )}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 20, color: 'var(--iron)', lineHeight: 1 }}>{day}</span>
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, color: 'var(--smoke)' }}>{dateStr}</span>
+            <span style={{ fontFamily: 'var(--font-dm)', fontWeight: 700, fontSize: 16, color: 'var(--text)' }}>{day}</span>
+            <span style={{ fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-2)' }}>{dateStr}</span>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--font-bebas)', fontSize: 22, color: 'var(--lime)', lineHeight: 1 }}>
+          <div style={{ fontFamily: 'var(--font-jetbrains)', fontWeight: 700, fontSize: 16, color: 'var(--text)' }}>
             {vol >= 1000 ? `${(vol / 1000).toFixed(1)}t` : `${vol}kg`}
           </div>
-          <div style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 9, color: 'var(--smoke)', letterSpacing: '0.06em' }}>
-            VOL · ~{kcal} KCAL
-          </div>
+          <div style={{ fontFamily: 'var(--font-dm)', fontSize: 11, color: 'var(--text-3)' }}>~{kcal} kcal</div>
         </div>
       </div>
 
-      {/* Exercises */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
         {workout.exercises.slice(0, isLatest ? 4 : 2).map((ex, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: getMuscleColor(ex.name),
-                flexShrink: 0,
-              }}
-            />
-            <span style={{ fontFamily: 'var(--font-bebas)', fontSize: 16, color: 'var(--iron)', lineHeight: 1, flex: 1 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: getMuscleColor(ex.name), flexShrink: 0 }} />
+            <span style={{ fontFamily: 'var(--font-dm)', fontSize: 14, fontWeight: 500, color: 'var(--text)', flex: 1 }}>
               {ex.name}
             </span>
-            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)' }}>
-              {ex.sets.length}×{ex.sets.map((s) => s.reps).join('/')}
+            <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, color: 'var(--text-3)' }}>
+              {ex.sets.length} sets
             </span>
           </div>
         ))}
         {workout.exercises.length > (isLatest ? 4 : 2) && (
-          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke-2)', paddingLeft: 14 }}>
+          <span style={{ fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-3)', paddingLeft: 15 }}>
             +{workout.exercises.length - (isLatest ? 4 : 2)} more
           </span>
         )}
       </div>
 
-      {/* Muscle tags */}
       {isLatest && muscles.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {muscles.slice(0, 5).map((m) => (
-            <span
-              key={m}
-              style={{
-                fontFamily: 'var(--font-jetbrains)',
-                fontSize: 9,
-                letterSpacing: '0.06em',
-                padding: '2px 7px',
-                borderRadius: 4,
-                background: `${getMuscleColor(m)}18`,
-                border: `1px solid ${getMuscleColor(m)}40`,
-                color: getMuscleColor(m),
-                textTransform: 'uppercase',
-              }}
-            >
+            <span key={m} style={{
+              fontFamily: 'var(--font-dm)', fontSize: 10, fontWeight: 500,
+              padding: '2px 8px', borderRadius: 999,
+              background: `${getMuscleColor(m)}18`, border: `1px solid ${getMuscleColor(m)}40`,
+              color: getMuscleColor(m),
+            }}>
               {m}
             </span>
           ))}
@@ -144,7 +92,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/workouts?limit=5').then((r) => setWorkouts(r.data.workouts)).finally(() => setLoading(false))
+    api.get('/workouts?limit=6').then((r) => setWorkouts(r.data.workouts)).finally(() => setLoading(false))
   }, [])
 
   const streak = calculateStreak(workouts)
@@ -152,9 +100,9 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 80, color: 'var(--smoke)' }}>
-        <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--lime)', borderTopColor: 'transparent' }} />
-        <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Loading</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 60, color: 'var(--text-3)' }}>
+        <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+        <span style={{ fontFamily: 'var(--font-dm)', fontSize: 13 }}>Loading...</span>
       </div>
     )
   }
@@ -162,18 +110,15 @@ function DashboardContent() {
   if (workouts.length === 0) {
     return (
       <div className="anim-in" style={{ paddingTop: 60, textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-bebas)', fontSize: 72, color: 'var(--edge-2)', lineHeight: 0.9, marginBottom: 16 }}>
-          IRONLOG
+        <div style={{ width: 64, height: 64, background: 'var(--accent-light)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M6 4v16M18 4v16M6 12h12M3 8h3M18 8h3M3 16h3M18 16h3" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </div>
-        <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 12, color: 'var(--smoke)', marginBottom: 32, letterSpacing: '0.06em' }}>
-          Your training journal starts here
-        </p>
-        <Link
-          href="/workouts/new"
-          className="btn-lime"
-          style={{ display: 'inline-block', padding: '14px 36px', borderRadius: 12, fontSize: 18, letterSpacing: '0.06em', textDecoration: 'none' }}
-        >
-          START FIRST SESSION
+        <h2 style={{ fontFamily: 'var(--font-dm)', fontWeight: 700, fontSize: 20, color: 'var(--text)', marginBottom: 8 }}>No workouts yet</h2>
+        <p style={{ fontFamily: 'var(--font-dm)', fontSize: 14, color: 'var(--text-2)', marginBottom: 28 }}>Start tracking your lifts today</p>
+        <Link href="/workouts/new" className="btn-accent" style={{ display: 'inline-block', padding: '13px 32px', borderRadius: 12, fontSize: 15, textDecoration: 'none' }}>
+          Start First Session
         </Link>
       </div>
     )
@@ -182,58 +127,34 @@ function DashboardContent() {
   return (
     <div>
       {/* Header */}
-      <div className="anim-up" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <p style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--smoke)', textTransform: 'uppercase', marginBottom: 2 }}>
-              {todayStr}
-            </p>
-            <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: 42, color: 'var(--iron)', lineHeight: 0.95, letterSpacing: '0.02em' }}>
-              IRONLOG
-            </h1>
-          </div>
-          <StreakBadge streak={streak} />
+      <div className="anim-up" style={{ marginBottom: 24 }}>
+        <p style={{ fontFamily: 'var(--font-dm)', fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>{todayStr}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ fontFamily: 'var(--font-dm)', fontWeight: 800, fontSize: 26, color: 'var(--text)', margin: 0 }}>Dashboard</h1>
+          {streak >= 2 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--amber-light)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 10, padding: '5px 10px' }}>
+              <span style={{ fontSize: 14 }}>🔥</span>
+              <span style={{ fontFamily: 'var(--font-dm)', fontWeight: 700, fontSize: 14, color: 'var(--amber)' }}>{streak} day streak</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* CTA */}
-      <Link
-        href="/workouts/new"
-        className="btn-lime anim-up"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          padding: '16px',
-          borderRadius: 14,
-          fontSize: 20,
-          letterSpacing: '0.06em',
-          textDecoration: 'none',
-          marginBottom: 24,
-          animationDelay: '40ms',
-        }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Link href="/workouts/new" className="btn-accent anim-up" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '15px', borderRadius: 14, fontSize: 15, fontWeight: 600, textDecoration: 'none', marginBottom: 28, animationDelay: '40ms' }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
-        START SESSION
+        Start Session
       </Link>
 
-      {/* Recent sessions */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--smoke)', textTransform: 'uppercase' }}>
-            Recent Sessions
-          </span>
-          <Link href="/workouts" style={{ fontFamily: 'var(--font-jetbrains)', fontSize: 10, color: 'var(--smoke)', textDecoration: 'none', letterSpacing: '0.06em' }}>
-            View all →
-          </Link>
-        </div>
-        {workouts.map((w, i) => (
-          <WorkoutCard key={w._id} workout={w} isLatest={i === 0} />
-        ))}
+      {/* Recent */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontFamily: 'var(--font-dm)', fontWeight: 600, fontSize: 14, color: 'var(--text-2)' }}>Recent Sessions</span>
+        <Link href="/workouts" style={{ fontFamily: 'var(--font-dm)', fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>View all</Link>
       </div>
+
+      {workouts.map((w, i) => <WorkoutCard key={w._id} workout={w} isLatest={i === 0} />)}
     </div>
   )
 }
