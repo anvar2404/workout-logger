@@ -26,13 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           {/* Main content */}
           <main
-            style={{
-              minHeight: '100vh',
-              padding: '28px 20px',
-            }}
-            className="md:pl-[calc(var(--sidebar-w)+32px)] md:pr-8 md:py-8 max-w-[900px] md:max-w-none"
+            className="main-content"
+            style={{ minHeight: '100vh', padding: '28px 20px' }}
           >
-            <div className="max-w-2xl mx-auto md:mx-0">
+            <div style={{ maxWidth: 680 }}>
               {children}
             </div>
           </main>

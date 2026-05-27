@@ -69,6 +69,16 @@ body {
   body { padding-bottom: var(--bottom-nav-h); }
 }
 
+/* Desktop main content offset for sidebar */
+@media (min-width: 768px) {
+  .main-content {
+    padding-left: calc(var(--sidebar-w) + 32px);
+    padding-right: 40px;
+    padding-top: 36px;
+    padding-bottom: 36px;
+  }
+}
+
 /* scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
